@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 @using System.Net.Http.Json
 @using Shared.Contracts.Responses
+@using WebApp.Components.Ui
 @inject IHttpClientFactory HttpClientFactory
 @inject ILogger<Weather> Logger
 
@@ -64,11 +65,7 @@
       </span>
 
       @* Provenance is first-class: never present a substituted or stale value as the user's own request. *@
-      <span class="provenance-chip @(_result.Provenance.Degraded ? "text-terracotta-700 border-terracotta-500" : "text-sage-700 border-sage-500")">
-        @_result.Provenance.SourceProvider · @_result.Provenance.CacheOutcome · @_result.Provenance.AgeSeconds.ToString("F0")s
-        @if (_result.Provenance.Failover) { <text> · substituted</text> }
-        @if (_result.Provenance.Degraded) { <text> · stale</text> }
-      </span>
+      <ProvenanceChip Provenance="@_result.Provenance" />
     </section>
 
     <div class="grid gap-5 md:grid-cols-3">
@@ -147,13 +144,28 @@
 </div>
 
 @code {
+    /// <summary>Set by the search screen: /weather?name=Tehran.</summary>
+    [SupplyParameterFromQuery(Name = "name")] public string? QueryName { get; set; }
+
+    /// <summary>Direct coordinates: /weather?lat=…&lon=…</summary>
+    [SupplyParameterFromQuery(Name = "lat")] public double? QueryLatitude { get; set; }
+
+    [SupplyParameterFromQuery(Name = "lon")] public double? QueryLongitude { get; set; }
+
+    [SupplyParameterFromQuery(Name = "providerId")] public string? QueryProviderId { get; set; }
+
     private string? _place = "Tehran";
     private bool _rtl;
     private bool _loading;
     private string? _error;
     private AggregatedWeatherResponse? _result;
 
-    protected override async Task OnInitializedAsync() => await SearchAsync();
+    protected override async Task OnInitializedAsync()
+    {
+        // The URL wins over the default: incoming navigation from the search screen must be honoured.
+        _place = QueryName ?? _place;
+        await SearchAsync();
+    }
 
     private async Task SearchAsync()
     {
@@ -163,9 +175,16 @@
         try
         {
             var client = HttpClientFactory.CreateClient("api");
-            var query = string.IsNullOrWhiteSpace(_place)
-                ? "lat=35.6892&lon=51.389"
-                : $"name={Uri.EscapeDataString(_place!)}";
+            var query = QueryLatitude is not null && QueryLongitude is not null
+                ? $"lat={QueryLatitude}&lon={QueryLongitude}"
+                : string.IsNullOrWhiteSpace(_place)
+                    ? "lat=35.6892&lon=51.389"
+                    : $"name={Uri.EscapeDataString(_place!)}";
+
+            if (!string.IsNullOrWhiteSpace(QueryProviderId))
+            {
+                query += $"&providerId={Uri.EscapeDataString(QueryProviderId!)}";
+            }
 
             _result = await client.GetFromJsonAsync<AggregatedWeatherResponse>($"/api/weather/aggregate?{query}");
         }
