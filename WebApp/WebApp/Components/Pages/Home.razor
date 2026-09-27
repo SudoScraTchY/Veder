@@ -65,9 +65,9 @@
 
     private string _place = string.Empty;
 
-    private void GoToCoordinate() => Navigation.NavigateTo("/weather?lat=35.6892&lon=51.389");
+    private void GoToCoordinate() => Navigation.NavigateTo(PlaceRoute.ForCoordinates(35.6892, 51.389));
 
     private void Submit() => GoTo(string.IsNullOrWhiteSpace(_place) ? "Tehran" : _place.Trim());
 
-    private void GoTo(string place) => Navigation.NavigateTo($"/weather?name={Uri.EscapeDataString(place)}");
+    private void GoTo(string place) => Navigation.NavigateTo(PlaceRoute.ForPlace(place));
 }
