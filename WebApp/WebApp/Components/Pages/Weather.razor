@@ -51,7 +51,7 @@
   @if (UiState != StateBlock.StateBlockState.Ready)
   {
     <StateBlock State="@UiState"
-                EmptyMessage="No reading was returned for that place."
+                EmptyMessage="No place matched that name. Try a different spelling, or use a coordinate."
                 ErrorMessage="Could not load weather data."
                 Hint="@_error"
                 OnRetry="SearchAsync" />
@@ -162,10 +162,12 @@
     private bool _loading;
     private string? _error;
     private AggregatedWeatherResponse? _result;
+    private bool _notFound;
 
     /// <summary>One state for the whole result region: loading, error or ready.</summary>
     private StateBlock.StateBlockState UiState =>
         _loading ? StateBlock.StateBlockState.Loading
+        : _notFound ? StateBlock.StateBlockState.Empty
         : _error is null ? StateBlock.StateBlockState.Ready
         : StateBlock.StateBlockState.Error;
 
@@ -180,6 +182,7 @@
     {
         _loading = true;
         _error = null;
+        _notFound = false;
 
         try
         {
@@ -196,6 +199,11 @@
             }
 
             _result = await client.GetFromJsonAsync<AggregatedWeatherResponse>($"/api/weather/aggregate?{query}");
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            // An unmatched place is an empty result, not a failure: it deserves its own presentation.
+            _notFound = true;
         }
         catch (Exception ex)
         {
