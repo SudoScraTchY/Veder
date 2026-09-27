@@ -58,3 +58,6 @@ nunit-*.xml
 
 # Tailwind v4 standalone CLI (downloaded per dev machine, not committed)
 tools/tailwind/tailwindcss.exe
+
+# Rider per-user settings
+*.DotSettings.user
