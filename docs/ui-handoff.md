@@ -156,3 +156,24 @@ Worth keeping in mind when extending the interface, because each looked correct 
 
 Twelve commits on `feat/phase3-4-provider-selection`, fast-forward pushes only, `main` untouched, working tree clean.
 The rendered pass — breakpoint captures and a keyboard-only walk — still needs the AutoClaw browser panel opened.
+
+## Configuration: the identity connection string is not in the repository
+
+`WebApi/appsettings.Development.json` no longer carries a database credential. Supply one out of band when you want
+accounts enabled:
+
+```powershell
+# per-developer, outside the repo
+& 'C:\Program Files\dotnet\dotnet.exe' user-secrets set "ConnectionStrings:VederIdentity" "<connection string>" --project WebApi
+# or, for a one-off run
+$env:ConnectionStrings__VederIdentity='<connection string>'
+```
+
+Verified with the credential absent: the host boots, `GET /api/weather/aggregate` returns `200`, and the identity
+endpoints are not mapped at all (`POST /register` → `404`). That is the "optional by construction" property — no
+weather feature is gated on accounts, and a missing store degrades to an unauthenticated app rather than a crash.
+
+**Rotation required.** The value removed here was published to the remote in commit `dc40ba5` and therefore still
+exists in history. Rewriting that history is out of scope for this work, so treat the credential as exposed: it was a
+local-only development password for a container on host port 55432, never a shared or production secret, but it should
+be rotated and never reused. The container itself can simply be recreated with a new password.
