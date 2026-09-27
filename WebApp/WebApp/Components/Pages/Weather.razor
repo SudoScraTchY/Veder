@@ -1,4 +1,4 @@
-@page "/weather"
+﻿@page "/weather"
 @rendermode InteractiveServer
 @using System.Net.Http.Json
 @using Shared.Contracts.Responses
@@ -47,14 +47,17 @@
     </button>
   </form>
 
-  @if (_error is not null)
+  @* Loading and failure get the same designed presentation as every other data view. *@
+  @if (UiState != StateBlock.StateBlockState.Ready)
   {
-    <div class="mb-6 rounded-card border border-terracotta-500 bg-parchment-100 px-4 py-3 text-terracotta-700">
-      @_error
-    </div>
+    <StateBlock State="@UiState"
+                EmptyMessage="No reading was returned for that place."
+                ErrorMessage="Could not load weather data."
+                Hint="@_error"
+                OnRetry="SearchAsync" />
   }
 
-  @if (_result is not null)
+  @if (_result is not null && UiState == StateBlock.StateBlockState.Ready)
   {
     <section class="mb-6 flex flex-wrap items-center gap-3">
       <h2 class="text-xl font-semibold text-ink-900">
@@ -159,6 +162,12 @@
     private bool _loading;
     private string? _error;
     private AggregatedWeatherResponse? _result;
+
+    /// <summary>One state for the whole result region: loading, error or ready.</summary>
+    private StateBlock.StateBlockState UiState =>
+        _loading ? StateBlock.StateBlockState.Loading
+        : _error is null ? StateBlock.StateBlockState.Ready
+        : StateBlock.StateBlockState.Error;
 
     protected override async Task OnInitializedAsync()
     {
