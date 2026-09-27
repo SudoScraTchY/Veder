@@ -94,3 +94,18 @@
     border: 1px solid currentColor;
   }
 }
+
+/*
+  Motion here is decorative - a skeleton pulse and colour transitions. Honour a reduced-motion
+  preference rather than asserting in documentation that we do.
+*/
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
