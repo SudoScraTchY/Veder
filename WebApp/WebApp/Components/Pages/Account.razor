@@ -1,0 +1,100 @@
+@page "/account"
+@rendermode InteractiveServer
+@using WebApp.Components.Ui
+@inject IHttpClientFactory HttpClientFactory
+@inject ILogger<Account> Logger
+
+<PageTitle>Veder · account</PageTitle>
+
+@*
+  Screen 4 of the design brief. Accounts are optional by design, so this screen has to be useful even
+  when they are switched off — which is the default. It therefore reports the real state of the account
+  service rather than presenting a form that cannot succeed.
+*@
+<main class="mx-auto max-w-2xl px-6 py-16">
+    <header class="mb-10">
+        <p class="font-mono text-xs uppercase tracking-[0.18em] text-sage-700">Veder</p>
+        <h1 class="mt-2 text-3xl font-semibold text-ink-900">Account</h1>
+        <p class="mt-2 text-ink-500">
+            Optional. Every forecast, air-quality reading and provider view on this site works signed out —
+            an account exists only so that saved places and alerts can be added later.
+        </p>
+    </header>
+
+    <StateBlock State="@_state"
+                EmptyMessage="Accounts are not enabled on this deployment."
+                ErrorMessage="Could not reach the account service."
+                Hint="@Hint"
+                OnRetry="CheckAsync" />
+
+    @if (_state == StateBlock.StateBlockState.Ready)
+    {
+        <section class="panel p-6">
+            <h2 class="text-lg font-semibold text-ink-900">Account service is available</h2>
+            <p class="mt-2 text-ink-700">
+                It is served by the API host rather than this site, so registration and sign-in are handled
+                there. Until the browser and API hosts share an origin — which needs CORS and cookie
+                configuration that this project has deliberately not guessed at — this page reports status
+                instead of pretending to submit.
+            </p>
+            <dl class="mt-5 space-y-2 text-sm">
+                <div class="flex gap-3">
+                    <dt class="w-40 text-ink-500">Endpoint probe</dt>
+                    <dd class="font-mono text-sage-700">@_probe</dd>
+                </div>
+                <div class="flex gap-3">
+                    <dt class="w-40 text-ink-500">Signed in</dt>
+                    <dd class="font-mono text-ink-900">@(_signedIn ? "yes" : "no")</dd>
+                </div>
+            </dl>
+        </section>
+    }
+</main>
+
+@code {
+    private StateBlock.StateBlockState _state = StateBlock.StateBlockState.Loading;
+    private string? _probe;
+    private bool _signedIn;
+
+    protected override async Task OnInitializedAsync() => await CheckAsync();
+
+    /// <summary>
+    /// The Identity endpoints are mapped only when the API host has a connection string configured, so
+    /// probing for them is the honest way to tell whether accounts exist here.
+    /// </summary>
+    private async Task CheckAsync()
+    {
+        _state = StateBlock.StateBlockState.Loading;
+
+        try
+        {
+            var client = HttpClientFactory.CreateClient("api");
+            using var response = await client.GetAsync("/manage/info");
+
+            _probe = $"GET /manage/info → {(int)response.StatusCode}";
+            _signedIn = response.StatusCode == System.Net.HttpStatusCode.OK;
+
+            // 404 means the route is not mapped at all: accounts are switched off, which is a valid state.
+            // 401 means they are mapped and we are simply not signed in.
+            _state = response.StatusCode is System.Net.HttpStatusCode.NotFound
+                ? StateBlock.StateBlockState.Empty
+                : StateBlock.StateBlockState.Ready;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Account service probe failed");
+            _state = StateBlock.StateBlockState.Error;
+        }
+    }
+
+    private string Hint => _state switch
+    {
+        StateBlock.StateBlockState.Empty =>
+            "The API host is running without ConnectionStrings:VederIdentity, so it maps no account endpoints. " +
+            "Set that connection string and apply the Identity migration to enable them. Nothing else changes: " +
+            "the weather features are identical either way.",
+        StateBlock.StateBlockState.Error =>
+            "The API did not answer at all. Check that it is running and that ApiBaseUrl points at it.",
+        _ => string.Empty
+    };
+}
