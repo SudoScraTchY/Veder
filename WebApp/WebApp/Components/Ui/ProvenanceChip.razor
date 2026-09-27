@@ -1,0 +1,60 @@
+@using Shared.Contracts.Responses
+
+@*
+  The product's visual grammar. Every reading states the provider that produced it and how the read was
+  satisfied, so a substituted or stale value can never be presented as the user's own request.
+  Colour is semantic here, not decorative: sage = normal, ochre = substituted, terracotta = stale.
+*@
+<span class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-xs @CssClass"
+      title="@Title"
+      aria-label="@Title">
+    <span aria-hidden="true">●</span>
+    @Label
+</span>
+
+@code {
+    [Parameter] public ResponseProvenance? Provenance { get; set; }
+
+    private bool IsDegraded => Provenance?.Degraded ?? false;
+
+    private bool IsSubstituted => Provenance?.Failover ?? false;
+
+    private string CssClass => IsDegraded
+        ? "border-terracotta-500 text-terracotta-700 bg-parchment-50"
+        : IsSubstituted
+            ? "border-ochre-500 text-ochre-700 bg-parchment-50"
+            : "border-sage-500 text-sage-700 bg-parchment-50";
+
+    private string Label
+    {
+        get
+        {
+            if (Provenance is null)
+            {
+                return "no data";
+            }
+
+            var label = $"{Provenance.SourceProvider} · {Provenance.CacheOutcome} · {Provenance.AgeSeconds:F0}s";
+
+            if (IsSubstituted)
+            {
+                label += " · substituted";
+            }
+
+            if (IsDegraded)
+            {
+                label += " · stale";
+            }
+
+            return label;
+        }
+    }
+
+    private string Title => Provenance is null
+        ? "No reading has been served yet."
+        : IsDegraded
+            ? $"Stale reading from {Provenance.SourceProvider}: the provider did not respond, so a previous value is shown."
+            : IsSubstituted
+                ? $"Served by {Provenance.SourceProvider} instead of {Provenance.RequestedProvider ?? "the preferred provider"}."
+                : $"Served by {Provenance.SourceProvider} ({Provenance.CacheOutcome}).";
+}

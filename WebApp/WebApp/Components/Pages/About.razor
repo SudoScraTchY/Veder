@@ -1,0 +1,70 @@
+@page "/about"
+@using WebApp.Components.Ui
+
+<PageTitle>Veder · how this works</PageTitle>
+
+<main class="mx-auto max-w-3xl px-6 py-12">
+    <header class="mb-10">
+        <p class="font-mono text-xs uppercase tracking-[0.18em] text-sage-700">Veder</p>
+        <h1 class="mt-2 text-3xl font-semibold text-ink-900">How this works</h1>
+        <p class="mt-2 text-ink-500">
+            Short version: we cache aggressively, pick a provider by priority, and tell you when either of
+            those shows.
+        </p>
+    </header>
+
+    <section class="mb-10">
+        <h2 class="text-xl font-semibold text-ink-900">The provenance chip</h2>
+        <p class="mt-2 text-ink-700">
+            Every reading carries a chip naming the provider that produced it, how the read was satisfied,
+            and how old the value is. Three colours mean three things:
+        </p>
+        <ul class="mt-4 space-y-3 text-ink-700">
+            <li>
+                <span class="inline-flex items-center gap-1.5 rounded-full border border-sage-500 bg-parchment-50 px-2.5 py-0.5 font-mono text-xs text-sage-700">● sage</span>
+                <span class="ml-3">a normal read, fresh or from cache inside its window.</span>
+            </li>
+            <li>
+                <span class="inline-flex items-center gap-1.5 rounded-full border border-ochre-500 bg-parchment-50 px-2.5 py-0.5 font-mono text-xs text-ochre-700">● ochre</span>
+                <span class="ml-3">served by a different provider than the one you asked for, because the requested one was unavailable or throttled.</span>
+            </li>
+            <li>
+                <span class="inline-flex items-center gap-1.5 rounded-full border border-terracotta-500 bg-parchment-50 px-2.5 py-0.5 font-mono text-xs text-terracotta-700">● terracotta</span>
+                <span class="ml-3">stale: the provider failed and we are showing a previous value rather than nothing.</span>
+            </li>
+        </ul>
+    </section>
+
+    <section class="mb-10">
+        <h2 class="text-xl font-semibold text-ink-900">Caching</h2>
+        <p class="mt-2 text-ink-700">
+            Weather does not change instantaneously, so readings are cached for a short window that depends
+            on the data: current conditions for a few minutes, air quality for longer, a forecast for hours.
+            Requests for nearby points share one entry — points inside the same small grid cell resolve to the
+            same cached reading — which is what keeps us from hammering the upstream APIs.
+        </p>
+    </section>
+
+    <section class="mb-10">
+        <h2 class="text-xl font-semibold text-ink-900">Provider selection</h2>
+        <p class="mt-2 text-ink-700">
+            Providers are ordered by priority and filtered by health and remaining quota. If you name a
+            provider we try it first; if it fails for a reason that is about availability we will answer from
+            the next one and say so. If you pass <code class="rounded border border-parchment-300 bg-parchment-50 px-1.5 font-mono text-sm">strictProvider=true</code>
+            we will not substitute at all and will return the failure instead — useful when you are comparing
+            providers.
+        </p>
+        <p class="mt-3 text-ink-700">
+            A request that is wrong stays wrong: bad coordinates or an out-of-range date are reported to you
+            rather than retried against someone else, and they never count against a provider's health.
+        </p>
+    </section>
+
+    <section>
+        <h2 class="text-xl font-semibold text-ink-900">No account needed</h2>
+        <p class="mt-2 text-ink-700">
+            Everything on this site works signed out. Accounts exist only so that saved places and alerts can
+            be added later; nothing is gated behind one, and no reading is personalised.
+        </p>
+    </section>
+</main>

@@ -1,0 +1,105 @@
+@page "/providers"
+@rendermode InteractiveServer
+@using System.Net.Http.Json
+@using Shared.Contracts.Responses
+@using WebApp.Components.Ui
+@inject IHttpClientFactory HttpClientFactory
+@inject ILogger<Providers> Logger
+
+<PageTitle>Veder · data sources</PageTitle>
+
+<main class="mx-auto max-w-4xl px-6 py-12">
+    <header class="mb-10">
+        <p class="font-mono text-xs uppercase tracking-[0.18em] text-sage-700">Veder</p>
+        <h1 class="mt-2 text-3xl font-semibold text-ink-900">Data sources</h1>
+        <p class="mt-2 max-w-2xl text-ink-500">
+            Every provider Veder knows about, its capabilities, and its position in the fallback order.
+            Health and quota change as calls succeed or fail, so this view is the honest answer to
+            "who is serving my weather right now?".
+        </p>
+    </header>
+
+    @if (_state is StateBlock.StateBlockState.Loading or StateBlock.StateBlockState.Error or StateBlock.StateBlockState.Empty)
+    {
+        <StateBlock State="@_state"
+                    EmptyMessage="No providers are registered."
+                    ErrorMessage="Could not reach the API."
+                    Hint="@(_state == StateBlock.StateBlockState.Error ? _error : "Without a registered provider there is nothing to fall back to.")"
+                    OnRetry="LoadAsync" />
+    }
+    else
+    {
+        <table class="w-full border-collapse text-left text-sm">
+            <caption class="sr-only">Configured providers with capabilities, priority and health</caption>
+            <thead>
+                <tr class="border-b border-ink-500/40">
+                    <th scope="col" class="py-3 pr-4 font-mono text-xs uppercase tracking-wide text-ink-500">Provider</th>
+                    <th scope="col" class="py-3 pr-4 font-mono text-xs uppercase tracking-wide text-ink-500">Priority</th>
+                    <th scope="col" class="py-3 pr-4 font-mono text-xs uppercase tracking-wide text-ink-500">Capabilities</th>
+                    <th scope="col" class="py-3 font-mono text-xs uppercase tracking-wide text-ink-500">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var provider in _providers)
+                {
+                    <tr class="border-b border-parchment-300">
+                        <td class="py-3 pr-4">
+                            <span class="font-medium text-ink-900">@provider.DisplayName</span>
+                            <span class="ml-2 font-mono text-xs text-ink-500">@provider.Id</span>
+                        </td>
+                        <td class="py-3 pr-4 font-mono">@provider.Priority</td>
+                        <td class="py-3 pr-4">
+                            <div class="flex flex-wrap gap-1.5">
+                                @foreach (var capability in provider.Capabilities)
+                                {
+                                    <span class="rounded-full border border-sage-500 px-2 py-0.5 font-mono text-[11px] text-sage-700">@capability</span>
+                                }
+                            </div>
+                        </td>
+                        <td class="py-3">
+                            @if (!provider.IsEnabled)
+                            {
+                                <span class="text-ink-500">disabled</span>
+                            }
+                            else if (provider.IsHealthy)
+                            {
+                                <span class="text-sage-700">healthy</span>
+                            }
+                            else
+                            {
+                                <span class="text-terracotta-700">unhealthy</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</main>
+
+@code {
+    private IReadOnlyList<ProviderResponse> _providers = [];
+    private StateBlock.StateBlockState _state = StateBlock.StateBlockState.Loading;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _state = StateBlock.StateBlockState.Loading;
+
+        try
+        {
+            var client = HttpClientFactory.CreateClient("api");
+            var providers = await client.GetFromJsonAsync<List<ProviderResponse>>("/api/providers") ?? [];
+            _providers = providers;
+            _state = providers.Count == 0 ? StateBlock.StateBlockState.Empty : StateBlock.StateBlockState.Ready;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Provider list request failed");
+            _error = "The API did not answer. Check that it is running and reachable.";
+            _state = StateBlock.StateBlockState.Error;
+        }
+    }
+}

@@ -1,29 +1,21 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">WebApp</a>
+@* Navigation for every screen named in the design brief, in reading order. *@
+<nav class="border-b border-parchment-300" aria-label="Main">
+    <div class="mx-auto flex max-w-5xl flex-wrap items-center gap-x-8 gap-y-2 px-6 py-4">
+        <a href="/" class="font-mono text-xs uppercase tracking-[0.18em] text-sage-700 hover:text-ochre-700">Veder</a>
+
+        <NavLink class="text-sm text-ink-700 hover:text-ochre-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ochre-700"
+                 href="/" Match="NavLinkMatch.All">Search</NavLink>
+
+        <NavLink class="text-sm text-ink-700 hover:text-ochre-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ochre-700"
+                 href="/weather">Weather</NavLink>
+
+        <NavLink class="text-sm text-ink-700 hover:text-ochre-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ochre-700"
+                 href="/providers">Data sources</NavLink>
+
+        <NavLink class="text-sm text-ink-700 hover:text-ochre-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ochre-700"
+                 href="/about">How this works</NavLink>
     </div>
-</div>
+</nav>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler"/>
-
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
-    </nav>
-</div>
+@code {
+}
