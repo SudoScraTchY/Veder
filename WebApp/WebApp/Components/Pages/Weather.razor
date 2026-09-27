@@ -36,7 +36,7 @@
   <form class="mb-8 flex flex-wrap items-end gap-3" @onsubmit="SearchAsync" @onsubmit:preventDefault>
     <label class="flex flex-col gap-1">
       <span class="font-mono text-xs uppercase tracking-wide text-ink-500">@(_rtl ? "نام مکان" : "Place")</span>
-      <input class="w-64 rounded-lg border border-parchment-300 bg-parchment-50 px-3 py-2 text-ink-900 outline-none focus:border-sage-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ochre-700"
+      <input class="w-full sm:w-64 rounded-lg border border-parchment-300 bg-parchment-50 px-3 py-2 text-ink-900 outline-none focus:border-sage-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ochre-700"
              placeholder="@(_rtl ? "تهران، برلین…" : "Tehran, Berlin…")" @bind="_place" />
     </label>
 
