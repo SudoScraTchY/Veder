@@ -1,23 +1,29 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
+@* The shell around every screen. Replaces the template's Bootstrap-era classes (page, sidebar,
+   top-row, text-danger) which no longer have any CSS behind them after the move to Tailwind. *@
+<div class="min-h-screen bg-parchment-50">
+    <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-ochre-700 focus:px-4 focus:py-2 focus:text-parchment-50">
+        Skip to content
+    </a>
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu/>
+    @* Static server-rendered nav: the skip link above is only useful if this is not interactive. *@
+    <div class="mx-auto max-w-5xl px-6 pt-6">
+        <NavMenu />
     </div>
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
+    <div id="main">
+        @Body
+    </div>
 
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
+    <footer class="mx-auto max-w-5xl px-6 pb-12 pt-4 text-sm text-ink-500">
+        <p>
+            Readings come from third-party providers and are cached; the chip on each reading names its source.
+        </p>
+    </footer>
 </div>
 
-<div id="blazor-error-ui" data-nosnippet>
+<div id="blazor-error-ui" class="hidden fixed bottom-0 left-0 right-0 border-t border-terracotta-500 bg-parchment-100 px-6 py-3 text-terracotta-700">
     An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
+    <a href="." class="ml-3 underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ochre-700">Reload</a>
+    <button type="button" class="ml-3 underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ochre-700" onclick="document.getElementById('blazor-error-ui').style.display='none'">Dismiss</button>
 </div>
