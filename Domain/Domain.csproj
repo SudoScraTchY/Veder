@@ -7,8 +7,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Folder Include="Entities\" />
-      <Folder Include="Events\" />
+      <Folder Include="Entities\ValueObjects\" />
+      <Folder Include="Entities\Enumerations\" />
+      <Folder Include="Entities\Interfaces\" />
+      <Folder Include="Entities\Events\" />
+      <Folder Include="Common\Interfaces\" />
+      <Folder Include="Common\Concrete\" />
       <Folder Include="Helpers\" />
     </ItemGroup>
 

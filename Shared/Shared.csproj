@@ -7,12 +7,21 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Folder Include="Contracts\" />
+      <Folder Include="Contracts\Queries\" />
+      <Folder Include="Contracts\Commands\" />
+      <Folder Include="Contracts\Responses\" />
+      <Folder Include="Contracts\Dto\" />
       <Folder Include="Helpers\" />
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="Cortex.Mediator" Version="3.1.2" />
+      <PackageReference Include="ErrorOr" Version="2.1.1" />
       <PackageReference Include="Riok.Mapperly" Version="4.3.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Domain\Domain.csproj" />
     </ItemGroup>
 
 </Project>

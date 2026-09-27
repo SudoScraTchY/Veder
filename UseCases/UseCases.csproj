@@ -9,11 +9,21 @@
     <ItemGroup>
       <Folder Include="Cases\" />
       <Folder Include="Services\" />
+      <Folder Include="IServices\" />
+      <Folder Include="Helpers\DI\" />
+      <Folder Include="Handlers\Queries\" />
+      <Folder Include="Handlers\Commands\" />
+      <Folder Include="Behaviors\" />
     </ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="Cortex.Mediator" Version="3.1.2" />
       <PackageReference Include="ErrorOr" Version="2.1.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Domain\Domain.csproj" />
+      <ProjectReference Include="..\Shared\Shared.csproj" />
     </ItemGroup>
 
 </Project>

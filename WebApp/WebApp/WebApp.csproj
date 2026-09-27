@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
@@ -10,6 +10,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\WebApp.Client\WebApp.Client.csproj"/>
+    <ProjectReference Include="..\..\Shared\Shared.csproj" />
         <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.9"/>
     </ItemGroup>
 
@@ -19,4 +20,24 @@
       </Content>
     </ItemGroup>
 
+  <!--
+    Tailwind CSS v4 build. The standalone CLI is used deliberately: this machine has no node/npm,
+    and the CLI produces identical output to the npm package. The binary is downloaded once per
+    development machine (see tools/tailwind) and is gitignored; when it is absent the committed
+    app.css is used so a fresh clone still builds.
+  -->
+  <PropertyGroup>
+    <TailwindCliPath Condition="'$(TailwindCliPath)' == ''">$(MSBuildProjectDirectory)\..\..\tools\tailwind\tailwindcss.exe</TailwindCliPath>
+    <TailwindInput>$(MSBuildProjectDirectory)\wwwroot\app.tailwind.css</TailwindInput>
+    <TailwindOutput>$(MSBuildProjectDirectory)\wwwroot\app.css</TailwindOutput>
+  </PropertyGroup>
+
+  <Target Name="BuildTailwind" BeforeTargets="BeforeBuild" Condition="Exists('$(TailwindCliPath)')">
+    <Message Importance="high" Text="Tailwind v4: compiling $(TailwindInput)" />
+    <Exec Command="&quot;$(TailwindCliPath)&quot; -i &quot;$(TailwindInput)&quot; -o &quot;$(TailwindOutput)&quot; --minify" />
+  </Target>
+
+  <Target Name="TailwindCliMissing" BeforeTargets="BeforeBuild" Condition="!Exists('$(TailwindCliPath)')">
+    <Warning Text="Tailwind CLI not found at $(TailwindCliPath); falling back to the committed app.css." />
+  </Target>
 </Project>

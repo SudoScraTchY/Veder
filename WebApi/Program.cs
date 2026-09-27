@@ -1,17 +1,42 @@
+﻿using Infrastructure.Helpers.DI;
+using Scalar.AspNetCore;
+using ServiceDefaults;
+using UseCases.Helpers.DI;
+using WebApi.Endpoints;
+using WebApi.Identity;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder.AddServiceDefaults();
 
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+// The cache is provider-scoped, so the host only has to supply an IDistributedCache:
+// Redis/Garnet when Aspire wires a "garnet" connection string, in-memory otherwise.
+if (!string.IsNullOrWhiteSpace(builder.Configuration.GetConnectionString("garnet")))
+{
+    builder.AddRedisDistributedCache("garnet");
+}
+else
+{
+    builder.Services.AddDistributedMemoryCache();
+}
+
+builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddOptions<WebApi.Endpoints.AggregationOptions>().Bind(builder.Configuration.GetSection(WebApi.Endpoints.AggregationOptions.SectionName));
+builder.Services.AddOpenMeteoProvider(builder.Configuration);
+
+// Identity is optional and additive: it never gates a weather endpoint.
+var identityEnabled = builder.Services.AddVederIdentity(builder.Configuration);
+builder.Services.AddUseCases();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
 app.UseHttpsRedirection();
@@ -19,5 +44,17 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapDefaultEndpoints();
+app.MapProvidersEndpoints();
+app.MapWeatherEndpoints();
+app.MapAggregatedWeatherEndpoints();
+
+if (identityEnabled)
+{
+    app.MapVederIdentityEndpoints();
+}
 
 app.Run();
+
+// Exposed so WebApplicationFactory<Program> can boot the real pipeline in integration tests.
+public partial class Program { }

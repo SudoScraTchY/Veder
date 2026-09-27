@@ -1,7 +1,13 @@
-using WebApp.Client.Pages;
+﻿using WebApp.Client.Pages;
 using WebApp.Components;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// The UI consumes the aggregated API over HTTP, so it renders whatever provider actually answered.
+builder.Services.AddHttpClient("api", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5199");
+});
 
 // Add services to the container.
 builder.Services.AddRazorComponents()

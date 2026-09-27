@@ -13,7 +13,13 @@
 
     <ItemGroup>
       <PackageReference Include="Ardalis.Specification.EntityFrameworkCore" Version="9.3.1" />
+      <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="10.0.10" />
       <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.10" />
+      <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.9" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
       <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -31,6 +37,7 @@
       <PackageReference Include="Serilog.Sinks.Elasticsearch" Version="10.0.0" />
       <PackageReference Include="Serilog.Sinks.Postgresql.Alternative" Version="4.2.0" />
       <PackageReference Include="Specification" Version="1.0.1" />
+      <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.1" />
     </ItemGroup>
 
     <ItemGroup>

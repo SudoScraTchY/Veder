@@ -1,67 +1,184 @@
-﻿@page "/weather"
-@attribute [StreamRendering]
+@page "/weather"
+@rendermode InteractiveServer
+@using System.Net.Http.Json
+@using Shared.Contracts.Responses
+@inject IHttpClientFactory HttpClientFactory
+@inject ILogger<Weather> Logger
 
-<PageTitle>Weather</PageTitle>
+<PageTitle>Veder · weather</PageTitle>
 
-<h1>Weather</h1>
+@*
+  The whole page is styled with Tailwind v4 utilities plus the design tokens defined in
+  app.tailwind.css. Direction is a single attribute on the wrapper, so the Persian layer reuses the
+  same markup rather than duplicating it.
+*@
+<div class="mx-auto max-w-5xl px-6 py-10" dir="@(_rtl ? "rtl" : "ltr")">
 
-<p>This component demonstrates showing data.</p>
+  <header class="mb-8 flex flex-wrap items-end justify-between gap-4 border-b border-parchment-300 pb-5">
+    <div>
+      <p class="font-mono text-xs uppercase tracking-[0.18em] text-sage-700">Veder</p>
+      <h1 class="mt-1 text-3xl font-semibold text-ink-900">@(_rtl ? "آب‌وهوای نزدیک شما" : "Weather near you")</h1>
+      <p class="mt-1 max-w-xl text-ink-500">
+        @(_rtl
+          ? "یک درخواست، یک پاسخ: شرایط کنونی، چشم‌انداز روزانه و کیفیت هوا — همراه با منبع داده."
+          : "One request, one answer: current conditions, the daily outlook and air quality — with the source of every number.")
+      </p>
+    </div>
 
-@if (forecasts == null)
-{
-    <p>
-        <em>Loading...</em>
-    </p>
-}
-else
-{
-    <table class="table">
-        <thead>
-        <tr>
-            <th>Date</th>
-            <th aria-label="Temperature in Celsius">Temp. (C)</th>
-            <th aria-label="Temperature in Fahrenheit">Temp. (F)</th>
-            <th>Summary</th>
-        </tr>
-        </thead>
-        <tbody>
-        @foreach (var forecast in forecasts)
+    <button type="button"
+            class="rounded-full border border-parchment-300 bg-parchment-100 px-4 py-2 text-sm text-ink-700 hover:border-ochre-500 hover:text-ochre-700"
+            @onclick="() => _rtl = !_rtl">
+      @(_rtl ? "English" : "فارسی")
+    </button>
+  </header>
+
+  <form class="mb-8 flex flex-wrap items-end gap-3" @onsubmit="SearchAsync" @onsubmit:preventDefault>
+    <label class="flex flex-col gap-1">
+      <span class="font-mono text-xs uppercase tracking-wide text-ink-500">@(_rtl ? "نام مکان" : "Place")</span>
+      <input class="w-64 rounded-lg border border-parchment-300 bg-parchment-50 px-3 py-2 text-ink-900 outline-none focus:border-sage-500"
+             placeholder="@(_rtl ? "تهران، برلین…" : "Tehran, Berlin…")" @bind="_place" />
+    </label>
+
+    <button type="submit"
+            class="rounded-lg bg-ochre-500 px-5 py-2 font-medium text-parchment-50 hover:bg-ochre-700 disabled:opacity-50"
+            disabled="@_loading">
+      @(_loading ? (_rtl ? "در حال دریافت…" : "Fetching…") : (_rtl ? "نمایش" : "Show weather"))
+    </button>
+  </form>
+
+  @if (_error is not null)
+  {
+    <div class="mb-6 rounded-card border border-terracotta-500 bg-parchment-100 px-4 py-3 text-terracotta-700">
+      @_error
+    </div>
+  }
+
+  @if (_result is not null)
+  {
+    <section class="mb-6 flex flex-wrap items-center gap-3">
+      <h2 class="text-xl font-semibold text-ink-900">
+        @(_result.Location.RequestedName ?? _result.Location.Country ?? "Selected point")
+      </h2>
+      <span class="font-mono text-xs text-ink-500">
+        @_result.Location.Latitude.ToString("F3"), @_result.Location.Longitude.ToString("F3")
+      </span>
+
+      @* Provenance is first-class: never present a substituted or stale value as the user's own request. *@
+      <span class="provenance-chip @(_result.Provenance.Degraded ? "text-terracotta-700 border-terracotta-500" : "text-sage-700 border-sage-500")">
+        @_result.Provenance.SourceProvider · @_result.Provenance.CacheOutcome · @_result.Provenance.AgeSeconds.ToString("F0")s
+        @if (_result.Provenance.Failover) { <text> · substituted</text> }
+        @if (_result.Provenance.Degraded) { <text> · stale</text> }
+      </span>
+    </section>
+
+    <div class="grid gap-5 md:grid-cols-3">
+
+      <article class="panel p-5 md:col-span-2">
+        <h3 class="mb-3 font-mono text-xs uppercase tracking-wide text-ink-500">@(_rtl ? "اکنون" : "Now")</h3>
+
+        @if (_result.Current is null)
         {
-            <tr>
-                <td>@forecast.Date.ToShortDateString()</td>
-                <td>@forecast.TemperatureC</td>
-                <td>@forecast.TemperatureF</td>
-                <td>@forecast.Summary</td>
-            </tr>
+          <p class="text-terracotta-700">@(_rtl ? "شرایط کنونی در دسترس نیست." : "Current conditions are unavailable.")</p>
         }
-        </tbody>
-    </table>
-}
+        else
+        {
+          <p class="text-5xl font-semibold text-ink-900">
+            @_result.Current.TemperatureC.ToString("F1")<span class="text-2xl text-ink-500">°C</span>
+          </p>
+          <p class="mt-1 text-lg text-ochre-700">@_result.Current.Summary</p>
+
+          <dl class="mt-5 grid grid-cols-2 gap-y-3 text-sm sm:grid-cols-4">
+            <div><dt class="text-ink-500">@(_rtl ? "رطوبت" : "Humidity")</dt><dd class="font-mono">@_result.Current.HumidityPercent%</dd></div>
+            <div><dt class="text-ink-500">@(_rtl ? "باد" : "Wind")</dt><dd class="font-mono">@_result.Current.WindSpeedKph.ToString("F1") km/h</dd></div>
+            <div><dt class="text-ink-500">@(_rtl ? "جهت" : "Direction")</dt><dd class="font-mono">@_result.Current.WindDirectionDegrees°</dd></div>
+            <div><dt class="text-ink-500">@(_rtl ? "فشار" : "Pressure")</dt><dd class="font-mono">@_result.Current.PressureHpa.ToString("F0") hPa</dd></div>
+          </dl>
+        }
+      </article>
+
+      <article class="panel p-5">
+        <h3 class="mb-3 font-mono text-xs uppercase tracking-wide text-ink-500">@(_rtl ? "کیفیت هوا" : "Air quality")</h3>
+
+        @if (_result.AirQuality is null)
+        {
+          <p class="text-ink-500">@(_rtl ? "در دسترس نیست" : "Not available")</p>
+        }
+        else
+        {
+          <p class="text-4xl font-semibold text-sage-700">@_result.AirQuality.AqiValue</p>
+          <p class="mt-1 text-ink-700">@_result.AirQuality.AqiCategory</p>
+          <p class="mt-3 font-mono text-xs text-ink-500">
+            @(_rtl ? "آلاینده غالب" : "dominant") @_result.AirQuality.DominantPollutant ·
+            @_result.AirQuality.PollutantCount @(_rtl ? "سنجه" : "measures")
+          </p>
+        }
+      </article>
+    </div>
+
+    @if (_result.Forecast.Count > 0)
+    {
+      <section class="panel mt-5 p-5">
+        <h3 class="mb-4 font-mono text-xs uppercase tracking-wide text-ink-500">@(_rtl ? "چشم‌انداز روزانه" : "Daily outlook")</h3>
+        <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+          @foreach (var day in _result.Forecast.Take(7))
+          {
+            <div class="rounded-lg border border-parchment-300 bg-parchment-50 px-3 py-3">
+              <p class="font-mono text-xs text-ink-500">@day.Date.ToString("MM-dd")</p>
+              <p class="mt-1 text-lg font-semibold text-ink-900">@day.TemperatureMaxC.ToString("F0")°</p>
+              <p class="text-sm text-sage-700">@day.TemperatureMinC.ToString("F0")°</p>
+              <p class="mt-2 font-mono text-[11px] text-ink-500">@day.WindSpeedMaxKph.ToString("F0") km/h</p>
+            </div>
+          }
+        </div>
+      </section>
+    }
+
+    @if (_result.Warnings.Count > 0)
+    {
+      <section class="mt-5 rounded-card border border-parchment-300 bg-parchment-100 px-5 py-4">
+        <h3 class="mb-2 font-mono text-xs uppercase tracking-wide text-ink-500">@(_rtl ? "هشدارها" : "Notices")</h3>
+        <ul class="list-inside list-disc space-y-1 text-sm text-ink-700">
+          @foreach (var warning in _result.Warnings) { <li>@warning</li> }
+        </ul>
+      </section>
+    }
+  }
+
+</div>
 
 @code {
-    private WeatherForecast[]? forecasts;
+    private string? _place = "Tehran";
+    private bool _rtl;
+    private bool _loading;
+    private string? _error;
+    private AggregatedWeatherResponse? _result;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync() => await SearchAsync();
+
+    private async Task SearchAsync()
     {
-        // Simulate asynchronous loading to demonstrate streaming rendering
-        await Task.Delay(500);
+        _loading = true;
+        _error = null;
 
-        var startDate = DateOnly.FromDateTime(DateTime.Now);
-        var summaries = new[] { "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching" };
-        forecasts = Enumerable.Range(1, 5).Select(index => new WeatherForecast
+        try
         {
-            Date = startDate.AddDays(index),
-            TemperatureC = Random.Shared.Next(-20, 55),
-            Summary = summaries[Random.Shared.Next(summaries.Length)]
-        }).ToArray();
-    }
+            var client = HttpClientFactory.CreateClient("api");
+            var query = string.IsNullOrWhiteSpace(_place)
+                ? "lat=35.6892&lon=51.389"
+                : $"name={Uri.EscapeDataString(_place!)}";
 
-    private class WeatherForecast
-    {
-        public DateOnly Date { get; set; }
-        public int TemperatureC { get; set; }
-        public string? Summary { get; set; }
-        public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+            _result = await client.GetFromJsonAsync<AggregatedWeatherResponse>($"/api/weather/aggregate?{query}");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Aggregated weather request failed");
+            _error = _rtl
+                ? "دریافت داده ناموفق بود. سرویس‌های آب‌وهوا ممکن است موقتاً در دسترس نباشند."
+                : "Could not load weather data. The upstream provider may be temporarily unavailable.";
+        }
+        finally
+        {
+            _loading = false;
+        }
     }
-
 }
