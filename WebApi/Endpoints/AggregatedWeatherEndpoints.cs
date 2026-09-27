@@ -1,20 +1,11 @@
-﻿using Domain.Caching;
+using Domain.Caching;
 using Domain.Entities;
-using Domain.Entities.Enumerations;
 using Domain.Entities.Enumerations;
 using Domain.Entities.Exceptions;
 using Domain.Entities.Interfaces;
 using Domain.Entities.ValueObjects;
 using Microsoft.Extensions.Options;
 using Shared.Contracts.Responses;
-// Qualified explicitly below: WebApi.WeatherForecast (the stock template class) shadows the domain record here.
-
-// The stock ASP.NET template ships WebApi.WeatherForecast, which shadows the domain record in this
-// namespace; alias the domain type so the intent here is unambiguous.
-
-// The stock ASP.NET template ships WebApi.WeatherForecast, which shadows the domain record in this
-// namespace; alias the domain type so the intent is unambiguous.
-
 namespace WebApi.Endpoints;
 
 /// <summary>
@@ -100,7 +91,7 @@ public static class AggregatedWeatherEndpoints
             }
 
             // 3. Walk the order, substituting only where the failure policy permits it.
-            CacheReadResult<Domain.Entities.WeatherForecast>? read = null;
+            CacheReadResult<WeatherForecast>? read = null;
             var failures = new List<string>();
 
             foreach (var candidateId in order)
@@ -126,7 +117,7 @@ public static class AggregatedWeatherEndpoints
                 {
                     read = await cache.GetOrCreateAsync(
                         key,
-                        async token => new CacheProduced<Domain.Entities.WeatherForecast>(await provider.GetForecastAsync(point, token), candidateId),
+                        async token => new CacheProduced<WeatherForecast>(await provider.GetForecastAsync(point, token), candidateId),
                         CacheTtlPolicy.For(WeatherDataType.CurrentConditions),
                         null,
                         ct);

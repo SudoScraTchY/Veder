@@ -1,4 +1,4 @@
-﻿using Infrastructure.Helpers.DI;
+using Infrastructure.Helpers.DI;
 using Scalar.AspNetCore;
 using ServiceDefaults;
 using UseCases.Helpers.DI;
@@ -9,8 +9,12 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+
+// Explicit, not inherited from AddControllers(): the host calls UseAuthorization(), so the
+// authorization services must be registered by name rather than as a side effect of MVC.
+// The identity layer is additive and optional, but the pipeline is the same either way.
+builder.Services.AddAuthorization();
 
 // The cache is provider-scoped, so the host only has to supply an IDistributedCache:
 // Redis/Garnet when Aspire wires a "garnet" connection string, in-memory otherwise.
@@ -43,7 +47,6 @@ app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
-app.MapControllers();
 app.MapDefaultEndpoints();
 app.MapProvidersEndpoints();
 app.MapWeatherEndpoints();

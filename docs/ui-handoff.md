@@ -12,11 +12,11 @@ What was built in the UI work, how to run it, what is real versus mocked, and wh
 & 'C:\Program Files\dotnet\dotnet.exe' test  Veder.Server.slnx
 
 # API (the UI reads this)
-& 'C:\Program Files\dotnet\dotnet.exe' run --project WebApi --urls http://127.0.0.1:5199
+& 'C:\Program Files\dotnet\dotnet.exe' run --project WebApi --urls http://127.0.0.1:5680
 
 # UI
-$env:ApiBaseUrl='http://127.0.0.1:5199'
-& 'C:\Program Files\dotnet\dotnet.exe' run --project WebApp\WebApp --urls http://127.0.0.1:5210
+$env:ApiBaseUrl='http://127.0.0.1:5680'
+& 'C:\Program Files\dotnet\dotnet.exe' run --project WebApp\WebApp --urls http://127.0.0.1:5690
 ```
 
 Tailwind CSS is compiled by `dotnet build` itself. No Node.js is installed on this machine and none is
@@ -125,7 +125,7 @@ access permissions") on `Socket.Bind` is **not** an application fault and **not*
 netsh int ipv4 show excludedportrange protocol=tcp
 ```
 
-At the time of writing `5141-5240` was excluded, which covers the `5199`/`5210` this document originally used — the
+At the time of writing `5041-5340` was excluded, which covers the `5680`/`5690` this document originally used — the
 ranges shift with container/WSL activity, so a port that worked earlier can stop working later with no code change.
 The interface was last verified running on `5390`/`5391`:
 
@@ -177,3 +177,13 @@ weather feature is gated on accounts, and a missing store degrades to an unauthe
 exists in history. Rewriting that history is out of scope for this work, so treat the credential as exposed: it was a
 local-only development password for a container on host port 55432, never a shared or production secret, but it should
 be rotated and never reused. The container itself can simply be recreated with a new password.
+
+---
+
+## Reserved ports: resolved
+
+The ports recorded below have moved out of the Windows excluded ranges - the API to `5680`/`5681`
+and the UI to `5690`/`5691` - and the UI no longer hard-codes an API address: it resolves
+`ApiBaseUrl`, then the AppHost-published endpoint, then `http://localhost:5680`, and logs the result
+at startup. The ranges shift between reboots, so run `tools\check-ports.ps1` rather than trusting a
+remembered number. See [`runbook-startup-and-ports.md`](runbook-startup-and-ports.md).

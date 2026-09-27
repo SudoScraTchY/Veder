@@ -1,6 +1,19 @@
-@WebApi_HostAddress = http://localhost:5270
+@WebApi_HostAddress = http://localhost:5680
 
-GET {{WebApi_HostAddress}}/weatherforecast/
+# Liveness and readiness, mapped by ServiceDefaults in Development.
+GET {{WebApi_HostAddress}}/health
+Accept: text/plain
+
+###
+
+# The one aggregated endpoint the UI reads.
+GET {{WebApi_HostAddress}}/api/weather/aggregate?lat=52.52&lon=13.405
+Accept: application/json
+
+###
+
+# Provider registry with capability flags.
+GET {{WebApi_HostAddress}}/api/providers
 Accept: application/json
 
 ###

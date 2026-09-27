@@ -228,7 +228,7 @@ provider would; the rest expose the extended datasets directly.
 
 All ten responses above were captured from a live run against the public API on 2026-09-22
 (`http://127.0.0.1:5199`, `ASPNETCORE_ENVIRONMENT=Development`). The routing failure that first appeared here —
-`Duplicate endpoint name 'GetWeatherForecast'` colliding with the template controller — is fixed; endpoint names
+`Duplicate endpoint name 'GetWeatherForecast'` colliding with the template controller (since deleted outright, along with the rest of the ASP.NET sample scaffolding) — is fixed; endpoint names
 are now capability-scoped, and `WeatherEndpointTests` locks the behaviour in.
 
 ---

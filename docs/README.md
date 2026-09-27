@@ -40,11 +40,11 @@ re-resolves `dotnet` from `PATH` — set `DOTNET_ROOT=C:\Program Files\dotnet` a
 & 'C:\Program Files\dotnet\dotnet.exe' test  Veder.Server.slnx
 
 # API
-& 'C:\Program Files\dotnet\dotnet.exe' run --project WebApi --urls http://127.0.0.1:5199
+& 'C:\Program Files\dotnet\dotnet.exe' run --project WebApi --urls http://127.0.0.1:5680
 
 # UI (talks to the API over HTTP)
-$env:ApiBaseUrl='http://127.0.0.1:5199'
-& 'C:\Program Files\dotnet\dotnet.exe' run --project WebApp\WebApp --urls http://127.0.0.1:5210
+$env:ApiBaseUrl='http://127.0.0.1:5680'
+& 'C:\Program Files\dotnet\dotnet.exe' run --project WebApp\WebApp --urls http://127.0.0.1:5690
 
 # or the whole thing under Aspire
 & 'C:\Program Files\dotnet\dotnet.exe' run --project AppHost\AppHost.csproj
@@ -66,7 +66,7 @@ Tailwind CSS is compiled as part of `dotnet build` (see §5). No Node.js is requ
 | `Aggregation:Units` / `Timezone` | Cache-key shaping | `metric` / `auto` |
 | `ProviderStore:RootPath` | Where call records, diagnostics, observations and the credential vault live | `%LOCALAPPDATA%\Veder\provider-store` |
 | `ConnectionStrings:VederIdentity` | Postgres connection for Identity. **Absent → Identity is skipped entirely** and the app still boots | *(none)* |
-| `ApiBaseUrl` | Where the Blazor UI looks for the API | `http://localhost:5199` |
+| `ApiBaseUrl` | Where the Blazor UI looks for the API | `http://localhost:5680` |
 
 Environment variables work in the usual ASP.NET Core form (`ConnectionStrings__VederIdentity`,
 `OpenMeteo__ApiKey`). `OpenMeteoOptions.Validate()` runs at startup and refuses to start on an invalid
@@ -243,3 +243,24 @@ separation), TTL policy and jitter, read-through behaviour (single-flight, stale
 failure classification and failover rules, Open-Meteo request validation and parsing, provider mapping,
 the aggregated composer, the credential vault, observation idempotency, and in-process HTTP endpoint
 tests that boot the real pipeline with a stubbed transport.
+
+---
+
+## 11. Startup and ports
+
+The API and UI ports live in the launch profiles and are **not** free choices: Windows reserves
+whole ranges for Hyper-V, WSL and Docker, and a socket inside one of them fails with
+`SocketException (10013)`, which Kestrel treats as fatal. Every port this project used before
+(`5199`, `5210`, `5270`, `5273`) sat inside a reserved range, which is why the API appeared to start
+and then die, and why the UI could never reach it.
+
+Current: API `5680` (http) / `5681` (https), UI `5690` (http) / `5691` (https).
+
+Check the machine before blaming the code:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\check-ports.ps1
+```
+
+Full diagnosis, the change list, and how to confirm the fix:
+[`runbook-startup-and-ports.md`](runbook-startup-and-ports.md).
