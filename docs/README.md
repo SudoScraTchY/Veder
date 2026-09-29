@@ -1,4 +1,4 @@
-# Veder — weather and air-quality service
+﻿# Veder — weather and air-quality service
 
 A .NET 10 Aspire solution that aggregates weather and air-quality data from external providers behind
 one cache-aware, failover-capable API, with an optional account layer and a Blazor UI.
@@ -264,3 +264,40 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools\check-ports.ps1
 
 Full diagnosis, the change list, and how to confirm the fix:
 [`runbook-startup-and-ports.md`](runbook-startup-and-ports.md).
+---
+
+## Documentation index
+
+| Document | What it covers |
+| --- | --- |
+| [../README.md](../README.md) | Project entry point: what it is, quickstart, prerequisites, layout, troubleshooting |
+| [architecture.md](architecture.md) | Purpose, components, interfaces, data flow, runtime and deployment topology |
+| [stack.md](stack.md) | Every language, framework and dependency with version, role and reason |
+| [repository-structure.md](repository-structure.md) | Annotated map of every directory, module and entry point |
+| [setup.md](setup.md) | Clone to running instance, configuration reference, troubleshooting |
+| [decisions/0001-layering.md](decisions/0001-layering.md) | Where provider adapters live, and why Domain stays ignorant of them |
+| [decisions/0002-cache-identity.md](decisions/0002-cache-identity.md) | Grid cells instead of rounding, provider inside the key, no cross-provider caching |
+| [decisions/0003-failure-policy.md](decisions/0003-failure-policy.md) | Failure classification, per-provider health, substitution rules |
+| [decisions/0004-storage-choices.md](decisions/0004-storage-choices.md) | JSON store, PostgreSQL for accounts, the MongoDB that is not consumed |
+| [decisions/0005-url-scheme.md](decisions/0005-url-scheme.md) | Path-based readings; soft-404 and unused-WebAssembly open items |
+| [decisions/0006-portability-and-naming.md](decisions/0006-portability-and-naming.md) | Lowercase file names, gitignored Tailwind CLI, port exclusions |
+| [providers/open-meteo.md](providers/open-meteo.md) | Provider implementation and its capability matrix |
+| [ui-design-brief.md](ui-design-brief.md) | Screens, primary flow and visual direction |
+| [ui-handoff.md](ui-handoff.md) | Interface handoff, run instructions, what is not wired |
+| [ui-accessibility.md](ui-accessibility.md) | Measured contrast ratios and the colour rule they produced |
+| [runbook-startup-and-ports.md](runbook-startup-and-ports.md) | The port-exclusion trap and its diagnosis |
+
+### Keeping this set current
+
+Ownership follows the code: whoever changes a component updates the document describing it **in the
+same commit**. Version numbers appear in [stack.md](stack.md) and in the prerequisites table of
+[../README.md](../README.md), and both must agree with the project files. When a document and the code
+disagree, the code is correct — fix the document.
+
+### Review checklist
+
+- Every relative link resolves; no orphan document and no duplicated content.
+- No unfinished-work markers, filler text or dangling references anywhere.
+- Versions agree between [stack.md](stack.md) and the `.csproj` files.
+- Mermaid diagrams render in the GitHub preview.
+- Commands in [setup.md](setup.md) still match `launchSettings.json` and `AppHost.cs`.
