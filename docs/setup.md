@@ -1,4 +1,4 @@
-# Setup and configuration
+﻿# Setup and configuration
 
 From a clone to a running instance, plus the configuration reference. Commands are PowerShell; the
 equivalents on other shells differ only in how environment variables are set.
@@ -45,7 +45,7 @@ $env:PATH = 'C:\Program Files\dotnet;' + $env:PATH
 ## Get the code and build
 
 ```powershell
-git clone https://github.com/SudoScraTchY/Veder.Server.git
+git clone https://github.com/SudoScraTchY/Veder.git
 cd Veder.Server
 
 dotnet build Veder.Server.slnx

@@ -1,4 +1,4 @@
-# Veder
+﻿# Veder
 
 Weather and air-quality service: one HTTP call returns current conditions, a daily outlook and air
 quality for any place — and names the provider that actually answered.
@@ -24,7 +24,7 @@ UI is deliberately calm and legible rather than decorative, and it works from 36
 Verified on Windows with .NET SDK 10 (see [Prerequisites](#prerequisites)):
 
 ```powershell
-git clone https://github.com/SudoScraTchY/Veder.Server.git
+git clone https://github.com/SudoScraTchY/Veder.git
 cd Veder.Server
 
 # 1. build
